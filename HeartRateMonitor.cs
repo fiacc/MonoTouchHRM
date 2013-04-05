@@ -164,7 +164,7 @@ public class HeartRateMonitor
     {
         public override void UpdatedState(CBCentralManager central)
         {
-            Console.WriteLine("State updated " + central.State);
+            Log("State updated " + central.State);
         }
     }
 
