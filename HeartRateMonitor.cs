@@ -51,7 +51,7 @@ public class HeartRateMonitor
         _manager.DisconnectedPeripheral += HandleDisconnectedPeripheral;
 
         var guidsw = new CBUUID[] { CBUUID.FromString(BluetoothConstants.HEART_RATE_SERVICE) };
-        _manager.ScanForPeripherals(guidsw, null);
+        _manager.ScanForPeripherals(guidsw, null);//Search for a peripheral that provides the HRM service
     }
 
 
@@ -65,6 +65,12 @@ public class HeartRateMonitor
     {
         Debug.WriteLineIf(Logging, message);
     }
+
+    /// <summary>
+    /// Connected to the peripheral, set up event handlers and look for services
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void HandleConnectedPeripheral(object sender, CBPeripheralEventArgs e)
     {
         _hrm.UpdatedCharacterteristicValue += Peripheral_UpdatedCharacterteristicValue;
@@ -89,7 +95,11 @@ public class HeartRateMonitor
     {
         Log("_hrm_DiscoveredIncludedService::" + e.Service.Description);
     }
-
+    /// <summary>
+    /// Found the service, discover the service characteristics
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void _hrm_DiscoveredService(object sender, NSErrorEventArgs e)
     {
         if (_hrm.Services.Length > 0)
@@ -101,6 +111,11 @@ public class HeartRateMonitor
         }
     }
 
+    /// <summary>
+    /// Discovered the Characteristics, tell the Peripheral what we're interested in
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void Peripheral_DiscoverCharacteristic(object sender, CBServiceEventArgs e)
     {
         Log("Peripheral_DiscoverCharacteristic::Length:" + e.Service.Characteristics.Length);
@@ -119,6 +134,7 @@ public class HeartRateMonitor
                 continue;
             }
 
+            // Write heart rate control point
             if (characteristic.UUID.ToString().ToUpper() == BluetoothConstants.HEART_RATE_CONTROL_POINT)
             {
                 var bytes = new byte[0];
@@ -131,7 +147,11 @@ public class HeartRateMonitor
     }
 
 
-
+    /// <summary>
+    /// When we get sent a value from the HRM
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void Peripheral_UpdatedCharacterteristicValue(object sender, CBCharacteristicEventArgs e)
     {
         var characteristic = e.Characteristic;
@@ -153,8 +173,14 @@ public class HeartRateMonitor
         }
     }
 
+    /// <summary>
+    /// We've discovered a peripheral
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void HandleDiscoveredPeripheral(object sender, CBDiscoveredPeripheralEventArgs e)
     {
+        //this just assumes the peripheral is what we're after
         _hrm = e.Peripheral;
         var options = new NSDictionary();
         _manager.ConnectPeripheral(_hrm, options);
